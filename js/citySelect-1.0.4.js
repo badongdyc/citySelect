@@ -19,6 +19,10 @@
  * onTabsAfter          [function]          点击tabs切换显示城市后的回调
  * onTabsForbid         [function]          tabs禁止后再点击的回调
  * onCallerAfter        [function]          选择城市后的回调
+ *
+ * 扩展事件
+ * onDel				[function]			删除城市后的回调
+ * onClear				[function]			清空城市后的回调
  */
 
 (function ($, window) {
@@ -61,7 +65,9 @@
         onForbid: function () {},
         onTabsAfter: function (target) {},
         onTabsForbid: function (target) {},
-        onCallerAfter: function (target, values) {}
+        onCallerAfter: function (target, values) {},
+		onDel: function (target,values) {},
+		onClear: function (target) {}
     };
 
     /**
@@ -695,6 +701,7 @@
     }
 
     functionality.deletes = function (event) {
+		var configure = this.options;
         var self = this,
             $target = $(event.currentTarget),
             $parent = $target.parent(),
@@ -726,6 +733,10 @@
             //调整文本框位置
             functionality.singleResize.call(self);
         }
+		if (self.values.length < 1) {
+			self.$selector.find('.city-input').removeClass('hide').addClass('not-val');
+		}
+		configure.onDel.call(this,$target,self.values[0]);
     }
 
     /**
@@ -856,6 +867,8 @@
     }
 
     Cityselect.prototype.showDrop = function (event) {
+    	//先隐所有已经弹出的
+		this.hideAllDrop();
         var self = this,
             configure = self.options,
             $target = self.$selector.find('.city-info');
@@ -882,6 +895,13 @@
         $selector.removeClass('down').find('.city-pavilion, .city-list').addClass('hide');
         $selector.find('.city-input').removeClass('search-show').find('.input-search').val('').blur();
     }
+
+	Cityselect.prototype.hideAllDrop = function () {
+		var $selector = $('.city-select');
+
+		$selector.removeClass('down').find('.city-pavilion, .city-list').addClass('hide');
+		$selector.find('.city-input').removeClass('search-show').find('.input-search').val('').blur();
+	}
 
     Cityselect.prototype.bindEvent = function (event) {
         var self = this,
@@ -1013,8 +1033,10 @@
         }
     }
 
-    Cityselect.prototype.clear = function () {
-        //清空选中的值
+    Cityselect.prototype.clear = function (event) {
+		var $target = $(event.currentTarget);
+		var configure = this.options;
+		//清空选中的值
         this.multiSelectResult = [];
         this.multiSelectResultId = [];
         this.provinceId = [];
@@ -1029,6 +1051,7 @@
         if (this.values.length < 1) {
             this.$selector.find('.city-input').removeClass('hide').addClass('not-val');
         }
+		configure.onClear.call(this,$target);
     }
 
     Cityselect.prototype.status = function (status) {
